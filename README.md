@@ -11,7 +11,7 @@ Use:
 
 The program is run from the command line, and takes three arguments: -bwt/-ibwt for encoding/decoding, input_filename, and output_filename. For example: 
 
-python bwt.py -bwt moby_dick.fasta moby_dick.bwt.fasta
+python bwt.py -bwt moby_dick.fasta moby_dick.bwt.fasta \n
 python bwt.py -ibwt moby_dick.bwt.fasta moby_dick.ibwt.fasta
 
 The first command would read the text from moby_dick.fasta and output its bwt in fasta format to moby_dick.bwt.fasta
