@@ -235,14 +235,23 @@ def make_m_occ(bwt):
 def decode(bwt, m, occ_arr):
 	'''Input: bwt, m[c] -> 1st pos c in F, array of occ for char at each pos
 	Output: decoded string'''
-	s = '$'
+	l = ['$']
 	char_idx = 0
 	char = bwt[char_idx]
+	i = 0
+	s = ''
 	while char != '$':
 		s = char + s
 		char_idx = m[char] + occ_arr[char_idx]
 		char = bwt[char_idx]
-	return s
+		i += 1
+		if i % 1000 == 0: 
+			l = [s] + l
+			print i
+			s = ''
+	l = [s] + l
+	text = string.join(l, '')
+	return text
 
 def make_fasta(out_file, header, text):
 	f = file(out_file, 'w')
@@ -267,6 +276,7 @@ def route():
 
 	if transform == '-bwt':
 		text = parse_fasta(in_file)
+		print len(text)
 		triples = make_triples(text)
 		suff_arr = dc3_loop(text)
 		bwt = make_bwt(text, suff_arr)
@@ -284,7 +294,7 @@ def route():
 		return "Please enter valid procedure flag [-bwt, -ibwt]"
 
 if __name__ == "__main__":
-	# start = time.time()
+	start = time.time()
 	print route()
-	# finish = time.time()
-	# print finish-start
+	finish = time.time()
+	print finish-start
