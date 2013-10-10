@@ -1,5 +1,6 @@
 import sys
 import string
+import time
 
 def parse_fasta(in_file):
 	'''Input: name of fasta in_file
@@ -7,7 +8,7 @@ def parse_fasta(in_file):
 	f = file(in_file, 'r')
 	s = ''
 	for line in f:
-		if not (line[0] == '' or line[0] == '>' or line[0] == ';' or line[0] == '\n'):
+		if not (line[0] == '' or line[0] == '>' or line[0] == ';'):
 			s += line
 	return string.join(s.splitlines(), '')
 
@@ -21,11 +22,10 @@ def make_triples(text, cclass=0):
 	Output: list of triples of text chars, starting from indices in cclass'''
 	text = text[cclass:]
 	rdr = len(text) % 3
-	pad = '$' * (3 - rdr)
-	text += pad
+	if rdr != 0: 
+		pad = '$' * (3 - rdr)
+		text += pad
 	triples = [[list(text[i:i + 3]), i + cclass] for i in xrange(0, len(text), 3)]
-	if rdr == 0: 
-		triples[-1][1] = None
 	return triples
 
 def rad_sort(triples, alpha, index=0):
@@ -102,10 +102,15 @@ def make_priority_dict(R_sorted):
 def merge(text, R0_sorted, R1R2_sorted):
 	'''Input: text(iterable), sorted subsets of triples R0, R1+R2
 	Output: A suffix array for text'''
-	if R0_sorted[-1][1] == None: del R0_sorted[-1]
-	if R0_sorted[0][1] == None: del R0_sorted[0]
-	if R1R2_sorted[-1][1] == None: del R1R2_sorted[-1]
-	if R1R2_sorted[0][1] == None: del R1R2_sorted[0]
+
+	if R0_sorted[-1][1] == None: 
+		del R0_sorted[-1]
+	if R0_sorted[0][1] == None: 
+		del R0_sorted[0]
+	if R1R2_sorted[-1][1] == None: 
+		del R1R2_sorted[-1]
+	if R1R2_sorted[0][1] == None: 
+		del R1R2_sorted[0]
 
 	pdict_R1R2 = make_priority_dict(R1R2_sorted)
 
@@ -115,38 +120,52 @@ def merge(text, R0_sorted, R1R2_sorted):
 	merged_indices = []
 
 	while i<len(R0_sorted) and j<len(R1R2_sorted):
-		elt0 = R0_sorted[i]
-		elt12 = R1R2_sorted[j]
-		if elt0[0][0] < elt12[0][0]:
-			merged_indices.append(elt0[1])
-			i += 1
-		elif elt12[0][0] < elt0[0][0]:
-			merged_indices.append(elt12[1])
-			j += 1
-		elif elt12[1] % 3 == 1:
-			if pdict_R1R2[elt0[1] + 1] < pdict_R1R2.get(elt12[1] + 1, -1):
+		try:
+			elt0 = R0_sorted[i]
+			elt12 = R1R2_sorted[j]
+			if elt0[0][0] < elt12[0][0]:
 				merged_indices.append(elt0[1])
 				i += 1
-			elif pdict_R1R2[elt0[1] + 1] > pdict_R1R2.get(elt12[1] + 1, -1):
+			elif elt12[0][0] < elt0[0][0]:
 				merged_indices.append(elt12[1])
 				j += 1
-			else: raise BADError
-		elif elt12[1] % 3 == 2:
-			if elt0[0][1] < elt12[0][1]:
-				merged_indices.append(elt0[1])
-				i += 1
-			elif elt12[0][1] < elt0[0][1]:
-				merged_indices.append(elt12[1])
-				j += 1
-			else:
-				if pdict_R1R2[elt0[1] + 2] < pdict_R1R2.get(elt12[1] + 2, -1):
+			elif elt12[1] % 3 == 1:
+				if elt0[0][1] < elt12[0][1]:
 					merged_indices.append(elt0[1])
 					i += 1
-				elif pdict_R1R2[elt0[1] + 2] > pdict_R1R2.get(elt12[1] + 2, -1):
+				elif elt12[0][1] < elt0[0][1]:
 					merged_indices.append(elt12[1])
 					j += 1
-				else: raise BADError
-		else: raise BADError
+				else: 
+					if pdict_R1R2[elt0[1] + 1] < pdict_R1R2.get(elt12[1] + 1, -1):
+						merged_indices.append(elt0[1])
+						i += 1
+					elif pdict_R1R2[elt0[1] + 1] > pdict_R1R2.get(elt12[1] + 1, -1):
+						merged_indices.append(elt12[1])
+						j += 1
+			elif elt12[1] % 3 == 2:
+				if elt0[0][1] < elt12[0][1]:
+					merged_indices.append(elt0[1])
+					i += 1
+				elif elt12[0][1] < elt0[0][1]:
+					merged_indices.append(elt12[1])
+					j += 1
+				else:
+					if elt0[0][2] < elt12[0][2]:
+						merged_indices.append(elt0[1])
+						i += 1
+					elif elt12[0][2] < elt0[0][2]:
+						merged_indices.append(elt12[1])
+						j += 1
+					else:
+						if pdict_R1R2[elt0[1] + 2] < pdict_R1R2.get(elt12[1] + 2, -1):
+							merged_indices.append(elt0[1])
+							i += 1
+						elif pdict_R1R2[elt0[1] + 2] > pdict_R1R2.get(elt12[1] + 2, -1):
+							merged_indices.append(elt12[1])
+							j += 1
+		except TypeError:
+			print R0_sorted[i], R1R2_sorted[j]
 
 	if i == len(R0_sorted):
 		for k in xrange(j, len(R1R2_sorted)):
@@ -154,7 +173,6 @@ def merge(text, R0_sorted, R1R2_sorted):
 	elif j == len(R1R2_sorted):
 		for k in xrange(i, len(R0_sorted)):
 			merged_indices.append(R0_sorted[k][1])
-	else: raise FROWNYError
 
 	return merged_indices
 
@@ -190,7 +208,10 @@ def make_bwt(text, suff_arr):
 	Output: bwt string'''
 	s = ''
 	for index in suff_arr:
-		s += text[index-1]
+		try:
+			s += text[index-1]
+		except TypeError:
+			pass
 	return s
 
 def make_m_occ(bwt):
@@ -233,6 +254,12 @@ def make_fasta(out_file, header, text):
 	f.write(text[i:])
 	f.close()
 
+def test_suff_arr(suff_arr):
+	for index, value in enumerate(sorted(suff_arr)):
+		if index != value:
+			return "Bad suffix array"
+	return "Good suffix array"
+
 def route():
 	transform = sys.argv[1]
 	in_file = sys.argv[2]
@@ -240,6 +267,7 @@ def route():
 
 	if transform == '-bwt':
 		text = parse_fasta(in_file)
+		triples = make_triples(text)
 		suff_arr = dc3_loop(text)
 		bwt = make_bwt(text, suff_arr)
 		make_fasta(out_file, 'BWT', bwt)
@@ -256,4 +284,7 @@ def route():
 		return "Please enter valid procedure flag [-bwt, -ibwt]"
 
 if __name__ == "__main__":
-	route()
+	# start = time.time()
+	print route()
+	# finish = time.time()
+	# print finish-start
