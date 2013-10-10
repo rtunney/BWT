@@ -23,3 +23,5 @@ bwt.py expects the input fasta file to be in the same directory as itself. It ou
 Format: 
 
 The program takes input and outputs files in fasta format. This includes a header line '>BWT' or '>iBWT', and subsequent lines limited to 80 characters of text each. The program will tolerate in the input file 1) comment lines designated with '>' or ';', and 2) newlines, but output is standard. Header is not critical to program function.
+
+***Texts input for BWT must end with a '$'*** This is by convention for alphabetical tie-breaking. 
