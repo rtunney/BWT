@@ -247,7 +247,6 @@ def decode(bwt, m, occ_arr):
 		i += 1
 		if i % 1000 == 0: 
 			l = [s] + l
-			print i
 			s = ''
 	l = [s] + l
 	text = string.join(l, '')
@@ -276,19 +275,20 @@ def route():
 
 	if transform == '-bwt':
 		text = parse_fasta(in_file)
-		print len(text)
+		print "Input size: " + str(len(text))
 		triples = make_triples(text)
 		suff_arr = dc3_loop(text)
 		bwt = make_bwt(text, suff_arr)
 		make_fasta(out_file, 'BWT', bwt)
-		return "see output file for bwt"
+		return "See output file for bwt"
 
 	elif transform == '-ibwt':
 		bwt = parse_fasta(in_file)
+		print "Input size: " + str(len(bwt))
 		m, occ_arr = make_m_occ(bwt)
 		text = decode(bwt, m, occ_arr)
 		make_fasta(out_file, 'iBWT', text)
-		return "see output file for text"
+		return "See output file for text"
 
 	else: 
 		return "Please enter valid procedure flag [-bwt, -ibwt]"
@@ -297,4 +297,4 @@ if __name__ == "__main__":
 	start = time.time()
 	print route()
 	finish = time.time()
-	print finish-start
+	print "Time: " + str(finish-start)
